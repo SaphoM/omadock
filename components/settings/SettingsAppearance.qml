@@ -353,6 +353,13 @@ Column {
     onToggled: root.setOption("showAppsButton", !root.showAppsButton)
   }
   SwitchRow {
+    key: "settingsButton"
+    label: "Settings button"
+    hint: "The gear at the end of the dock, opens the dock settings."
+    checked: root ? root.showSettingsButton : true
+    onToggled: root.setOption("showSettingsButton", !root.showSettingsButton)
+  }
+  SwitchRow {
     key: "removableDrives"
     label: "Removable drives"
     hint: "Show mounted USB drives at the end of the dock."

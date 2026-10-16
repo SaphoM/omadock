@@ -425,9 +425,24 @@ Item {
   // Distances are measured from each slot's *unmagnified* home centre, in
   // window coordinates. Nothing that magnification changes feeds back into
   // those numbers, so the wave cannot chase itself.
-  readonly property real magnifyPeak: 1.4
-  readonly property real zoomPeak: 1.22
-  readonly property real magnifyRange: root.iconSlot * 2.2
+  //
+  // Wave strength, zoom strength, reach (magnifySpread, in icon slots) and
+  // the animation time (magnifySmooth) live in the same shapes as every other
+  // look key: Settings > Motion > Magnification, and the config file.
+  //
+  // The default reach of three slots puts the falloff edge two icons out on
+  // each side, so the hovered icon and its two neighbours each side grow.
+  property real magnifyPeak: 1.8
+  property real zoomPeak: 1.4
+  property real magnifySpread: 3.0
+  // Milliseconds the magnify animation takes; longer trails behind the
+  // pointer more, which reads as smoother.
+  property real magnifySmooth: 160
+  // How far an icon rises (logical px) as it magnifies, following the same
+  // curve — a slight lift reads smoother than growth alone. Items derive it
+  // from their animated magnifyScale, so the two never disagree.
+  property real magnifyLift: 6
+  readonly property real magnifyRange: root.iconSlot * root.magnifySpread
   readonly property real baseIconArt: root.iconSize - Style.space(4)
   // Largest size an icon reaches under either hover effect; icons decode at
   // this size once instead of on every animation frame.
@@ -539,8 +554,10 @@ Item {
   readonly property bool hasLeftTileSeparator: root.hasTiles && (root.pinnedSection.length > 0 || root.groupSlots > 0)
 
   // Width arithmetic total: hidden (fully-tiled) entries occupy zero width,
-  // so the row-width and gap math must count only visible icons.
+  // so the row-width and gap math must count only visible icons. The settings
+  // button takes the last slot, after the drives.
   readonly property int visibleSlotTotal: root.appsSlots + root.pinnedSection.length + root.groupSlots + root.visibleRunningCount + root.folderSlots + root.driveSlots
+    + (root.showSettingsButton ? 1 : 0)
   readonly property int elementTotal: root.visibleSlotTotal
     + (root.hasSeparator ? 1 : 0)
     + (root.hasFolderSeparator ? 1 : 0)
@@ -906,6 +923,7 @@ Item {
   property bool autohide: true
   property bool intelligentAutohide: true
   property bool showAppsButton: true
+  property bool showSettingsButton: true
   property bool showTooltips: true
   property bool showMinimizedTiles: true
   // "zoom" grows only the icon under the pointer and leaves the layout alone —
@@ -1933,8 +1951,9 @@ Item {
     id: badgeFile
     path: root.badgePath
     maxBytes: DockModel.MAX_BADGE_BYTES
-    watchChanges: false
+    watchChanges: true
     onLoaded: root.loadBadgeState()
+    onFileChanged: badgeFile.reload()
   }
 
   // Bumps and clears can arrive in bursts; one save settles them.
@@ -2209,6 +2228,9 @@ Item {
     var rowCounts = DockModel.notificationCounts(root.notifEntries, root.appRows, [row])
     var ids = []
     for (var id in rowCounts) {
+      // Spotlight is a floating overlay, not a real focused app: it must never
+      // accumulate a sticky unread badge.
+      if (id === "xspark-spotlight") continue
       // A focused app shows no badge; its counts clear at the focus event.
       if (id && !(root.activeId && DockModel.isAppMatch(id, root.activeId))) ids.push(id)
     }
@@ -2391,6 +2413,16 @@ Item {
       ? parsed.hoverEffect
       : ((parsed && parsed.magnification === false) ? "off" : "zoom")
     root.launchBounce = parsed && parsed.launchBounce !== false
+    root.magnifyPeak = parsed && typeof parsed.magnifyPeak === "number" && isFinite(parsed.magnifyPeak)
+      ? Math.max(1.0, Math.min(2.6, Math.round(parsed.magnifyPeak * 100) / 100)) : 1.8
+    root.zoomPeak = parsed && typeof parsed.zoomPeak === "number" && isFinite(parsed.zoomPeak)
+      ? Math.max(1.0, Math.min(2.6, Math.round(parsed.zoomPeak * 100) / 100)) : 1.4
+    root.magnifySpread = parsed && typeof parsed.magnifySpread === "number" && isFinite(parsed.magnifySpread)
+      ? Math.max(1.0, Math.min(4.0, Math.round(parsed.magnifySpread * 10) / 10)) : 3.0
+    root.magnifySmooth = parsed && typeof parsed.magnifySmooth === "number" && isFinite(parsed.magnifySmooth)
+      ? Math.max(0, Math.min(400, Math.round(parsed.magnifySmooth))) : 160
+    root.magnifyLift = parsed && typeof parsed.magnifyLift === "number" && isFinite(parsed.magnifyLift)
+      ? Math.max(0, Math.min(20, Math.round(parsed.magnifyLift))) : 6
     root.configuredIconSize = parsed && typeof parsed.iconSize === "number" && isFinite(parsed.iconSize) && parsed.iconSize > 0
       ? Math.max(16, Math.min(96, Math.round(parsed.iconSize))) : 0
     if (parsed && (parsed.opacity === "theme" || parsed.opacity === "auto" || parsed.opacity === -1)) {
@@ -2484,6 +2516,7 @@ Item {
     root.autohide = parsed && parsed.autohide !== false
     root.intelligentAutohide = parsed && parsed.intelligentAutohide !== false
     root.showAppsButton = parsed && parsed.showAppsButton !== false
+    root.showSettingsButton = parsed && parsed.showSettingsButton !== false
     root.showTooltips = parsed && parsed.showTooltips !== false
     root.showMinimizedTiles = parsed ? parsed.showMinimizedTiles !== false : true
     root.advancedTooltips = parsed && parsed.advancedTooltips !== false
@@ -3879,10 +3912,16 @@ Item {
     conf.autohide = root.autohide
     conf.intelligentAutohide = root.intelligentAutohide
     conf.showAppsButton = root.showAppsButton
+    conf.showSettingsButton = root.showSettingsButton
     conf.showTooltips = root.showTooltips
     conf.showMinimizedTiles = root.showMinimizedTiles
     conf.hoverEffect = root.hoverEffect
     delete conf.magnification
+    conf.magnifyPeak = root.magnifyPeak
+    conf.zoomPeak = root.zoomPeak
+    conf.magnifySpread = root.magnifySpread
+    conf.magnifySmooth = root.magnifySmooth
+    conf.magnifyLift = root.magnifyLift
     conf.launchBounce = root.launchBounce
     conf.advancedTooltips = root.advancedTooltips
     if (root.screenName) conf.screen = root.screenName

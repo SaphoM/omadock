@@ -576,7 +576,10 @@ Item {
         rootRef: cardWrapper.rootRef
         visible: root ? root.showAppsButton : true
         homeCenter: root ? root.slotHomeCenter(0, 0, false) : 0
-        glyph: "\ue900"
+        glyph: "\uf179"
+        glyphFont: "JetBrainsMono Nerd Font"
+        glyphFill: 0.82
+        hoverImage: Qt.resolvedUrl("../assets/apple-hover.png")
         glyphColor: root ? root.dockForeground : Color.bar.text
         tooltip: "Omarchy"
         onPressed: Quickshell.execDetached(["omarchy-menu", "toggle", "root"])
@@ -879,6 +882,26 @@ Item {
           onMenuRequested: function(d, mp, n, s, cx, cy) {
             if (root) root.openDriveContext(d, mp, n, s, cx, cy)
           }
+        }
+      }
+
+      // Settings gear closes the row: the last slot, past every section.
+      DockIconButton {
+        rootRef: cardWrapper.rootRef
+        visible: root ? root.showSettingsButton : true
+        homeCenter: root ? root.slotHomeCenter(
+          root.appsSlots + root.pinnedSection.length + root.groupSlots + (root.hasLeftTileSeparator ? 1 : 0) + (root.hasSeparator ? 1 : 0) + root.tileElements + root.visibleRunningCount + (root.hasFolderSeparator ? 1 : 0) + root.pinnedFolders.length + (root.hasDriveSeparator ? 1 : 0) + root.driveSlots,
+          root.appsSlots + root.pinnedSection.length + root.groupSlots + root.visibleRunningCount + root.pinnedFolders.length + root.driveSlots,
+          (root.hasLeftTileSeparator ? 1 : 0) + (root.hasSeparator ? 1 : 0) + (root.hasFolderSeparator ? 1 : 0) + (root.hasDriveSeparator ? 1 : 0),
+          root.tilesFixedWidth) : 0
+        glyph: "\uf013"
+        glyphFont: "JetBrainsMono Nerd Font"
+        glyphFill: 0.9
+        glyphColor: root ? root.dockForeground : Color.bar.text
+        tooltip: "Dock settings"
+        onPressed: { if (root) root.openSettingsPanel() }
+        onMenuRequested: function(cx, cy) {
+          if (root) root.openDockSettingsMenu(cx, cy)
         }
       }
     }

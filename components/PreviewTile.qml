@@ -54,8 +54,17 @@ Item {
     if (root.hoverEffect !== "zoom") return 1
     return (tileArea.containsMouse && !tile.tileMenuOpen) ? root.zoomPeak : 1
   }
+
+  // The lift rides on the animated curve: whatever share of the peak the
+  // scale has reached, the same share of the rise, so the two never disagree.
+  readonly property real liftOffset: {
+    if (!root) return 0
+    var peak = root.waveHover ? root.magnifyPeak : root.zoomPeak
+    return root.magnifyLift * (tile.magnifyScale - 1) / Math.max(0.001, peak - 1)
+  }
+
   Behavior on magnifyScale {
-    NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+    NumberAnimation { duration: root ? root.magnifySmooth : 160; easing.type: Easing.OutCubic }
   }
 
   function doRestore() {
@@ -77,6 +86,7 @@ Item {
   anchors.verticalCenter: parent ? parent.verticalCenter : undefined
   anchors.verticalCenterOffset: root ? root.iconCenterOffset : 0
   opacity: (root && root.dockVisible) ? 1 : 0
+  transform: Translate { y: -tile.liftOffset }
 
   // Zoom mode scales this visual stack in place (the preview overlaps
   // neighbors exactly like magnified app icons); wave mode grows the

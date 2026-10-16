@@ -36,6 +36,14 @@ Item {
     return driveArea.containsMouse ? root.zoomPeak : 1
   }
 
+  // The lift rides on the animated curve: whatever share of the peak the
+  // scale has reached, the same share of the rise, so the two never disagree.
+  readonly property real liftOffset: {
+    if (!root) return 0
+    var peak = root.waveHover ? root.magnifyPeak : root.zoomPeak
+    return root.magnifyLift * (ditem.magnifyScale - 1) / Math.max(0.001, peak - 1)
+  }
+
   readonly property string resolvedSource: {
     var _tv = root ? root.themeVersion : 0
     var iconName = ditem.icon || "drive-removable-media-usb"
@@ -48,7 +56,7 @@ Item {
   readonly property bool isSymbolic: resolvedSource.indexOf("symbolic") >= 0
 
   Behavior on magnifyScale {
-    NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+    NumberAnimation { duration: root ? root.magnifySmooth : 160; easing.type: Easing.OutCubic }
   }
 
   Item {
@@ -57,6 +65,7 @@ Item {
     height: root ? root.iconSlot : 0
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
+    transform: Translate { y: -ditem.liftOffset }
 
     // Symbolic icons are grey templates; in the original style they take
     // the folder colour, as folder icons do. Every other case goes through

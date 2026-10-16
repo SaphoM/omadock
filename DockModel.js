@@ -816,6 +816,7 @@ var LOOK_KEYS = [
   "dividerGeometry", "dividerHeight", "dividerStyle", "dividerWidth", "dividerOpacity",
   "iconStyle", "iconTint", "iconHoverOriginal", "iconHoverReveal", "iconContrast", "iconStrength",
   "iconGrid", "indicatorShape", "hoverEffect", "launchBounce", "groupStyle",
+  "magnifyPeak", "zoomPeak", "magnifySpread", "magnifySmooth", "magnifyLift",
   "groupIconEffects", "folderColor", "iconSize", "itemSpacing", "sectionSpacing"
 ]
 var MAX_PRESETS = 6
@@ -1588,6 +1589,12 @@ var SETTINGS_SEARCH = [
   { key: "iconSize", page: "icons", label: "Icon size", terms: ["big", "small", "scale"] },
   { key: "itemSpacing", page: "icons", label: "Spacing", terms: ["gap", "distance"] },
   { key: "hoverEffect", page: "motion", label: "Hover effect", terms: ["zoom", "wave", "lift", "glow", "glitch", "magnify"] },
+  { key: "settingsButton", page: "appearance", label: "Settings button", terms: ["gear", "cog", "settings", "preferences", "dock settings"] },
+  { key: "magnifyPeak", page: "motion", label: "Wave strength", terms: ["magnify", "wave", "grow", "bigger", "size"] },
+  { key: "zoomPeak", page: "motion", label: "Zoom strength", terms: ["magnify", "zoom", "grow", "bigger", "size"] },
+  { key: "magnifySpread", page: "motion", label: "Magnification reach", terms: ["wave", "spread", "range", "neighbours", "distance"] },
+  { key: "magnifySmooth", page: "motion", label: "Magnification speed", terms: ["smooth", "animation", "fade", "trail"] },
+  { key: "magnifyLift", page: "motion", label: "Magnification lift", terms: ["lift", "rise", "raise", "smooth"] },
   { key: "launchBounce", page: "motion", label: "Launch bounce", terms: ["animation", "starting"] },
   { key: "showShadow", page: "motion", label: "Shadow", terms: ["drop", "elevation", "shadow"] },
   { key: "shadowStrength", page: "motion", label: "Shadow strength", terms: ["shadow"] },

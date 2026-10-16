@@ -11,10 +11,17 @@ Item {
   property var dockCard: root ? root.dockCard : null
 
   property string glyph: ""
+  property string glyphFont: "omarchy"
   property string tooltip: ""
   property color glyphColor: root ? root.dockForeground : Color.bar.text
   // Share of the icon box the glyph's larger side fills.
   property real glyphFill: 0.62
+  // Image that flips in over the glyph on hover (the Apple logo's coloured
+  // version). Empty keeps the flat glyph alone.
+  property string hoverImage: ""
+  // Crossfades the hover image in and over 180ms, no flicker.
+  property real hoverLevel: area.containsMouse ? 1 : 0
+  Behavior on hoverLevel { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
   signal pressed()
   signal middleClicked()
   signal menuRequested(real x, real y)
@@ -27,8 +34,16 @@ Item {
     return area.containsMouse ? root.zoomPeak : 1
   }
 
+  // The lift rides on the animated curve: whatever share of the peak the
+  // scale has reached, the same share of the rise, so the two never disagree.
+  readonly property real liftOffset: {
+    if (!root) return 0
+    var peak = root.waveHover ? root.magnifyPeak : root.zoomPeak
+    return root.magnifyLift * (btn.magnifyScale - 1) / Math.max(0.001, peak - 1)
+  }
+
   Behavior on magnifyScale {
-    NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+    NumberAnimation { duration: root ? root.magnifySmooth : 160; easing.type: Easing.OutCubic }
   }
 
   width: root ? (root.iconSlot * (root.waveHover ? btn.magnifyScale : 1)) : 0
@@ -49,6 +64,7 @@ Item {
     height: width
     scale: btn.magnifyScale * (area.pressed ? 0.92 : 1.0)
     transformOrigin: Item.Bottom
+    transform: Translate { y: -btn.liftOffset }
     iconStyle: root ? root.iconStyle : "original"
     tint: root ? root.iconTintColor : Color.bar.text
     grid: root ? root.iconGrid : 16
@@ -64,7 +80,7 @@ Item {
     // Probe at a fixed size to learn the glyph's ink-to-em ratio.
     TextMetrics {
       id: probeMetrics
-      font.family: "omarchy"
+      font.family: btn.glyphFont
       font.pixelSize: 100
       text: btn.glyph
     }
@@ -80,13 +96,26 @@ Item {
       readonly property real inkRatio: Math.max(0.01, Math.max(probeMetrics.tightBoundingRect.width, probeMetrics.tightBoundingRect.height) / 100)
       text: btn.glyph
       textFormat: Text.PlainText
-      font.family: "omarchy"
+      font.family: btn.glyphFont
       font.pixelSize: Math.max(1, Math.round(glyphBox.width * btn.glyphFill / inkRatio))
       color: area.containsMouse ? Color.accent
         : ((glyphBox.shownStyle === "mono" || glyphBox.shownStyle === "dots") ? glyphBox.tint : btn.glyphColor)
       x: Math.round(glyphBox.width / 2 - (glyphMetrics.tightBoundingRect.x + glyphMetrics.tightBoundingRect.width / 2))
       y: Math.round(glyphBox.height / 2 - (glyphText.baselineOffset + glyphMetrics.tightBoundingRect.y + glyphMetrics.tightBoundingRect.height / 2))
       Behavior on color { ColorAnimation { duration: 120 } }
+    }
+
+    // The hover image over the glyph: at full opacity it replaces the flat
+    // logo, and the glyph shows through again as it fades out.
+    Image {
+      id: hoverImg
+      anchors.fill: parent
+      source: btn.hoverImage
+      sourceSize: Qt.size(root ? root.maxIconArt : 64, root ? root.maxIconArt : 64)
+      smooth: true
+      fillMode: Image.PreserveAspectFit
+      visible: opacity > 0.01
+      opacity: btn.hoverLevel
     }
   }
 

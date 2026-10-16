@@ -419,6 +419,8 @@ Settings persist in `~/.config/omarchy/omadock.json` and are editable live:
 | `clickToMinimize` | `bool` | derived | Legacy mirror of `minimizeMode !== "off"` for older configs; set `minimizeMode` instead. |
 | `showMinimizedTiles` | `bool` | `true` | Displays live screencopy preview tiles for parked windows. |
 | `opacity` | `number \| str` | `1.0` | Background opacity: `"theme"`, `1.0`, `0.80`, `0.65`, `0.35`, `0.0`. |
+| `showAppsButton` | `bool` | `true` | The Omarchy launcher button at the start of the dock. |
+| `showSettingsButton` | `bool` | `true` | The gear button at the end of the dock; opens the dock settings. |
 | `shape` | `string` | `"rounded"` | Dock geometry: `"rounded"`, `"round"` (pill), `"square"`, `"theme"`. |
 | `cornerRadius` | `number` | `-1` | `-1` follows the shape's natural radius; `≥ 0` pins a pixel radius. |
 | `indicatorShape` | `string` | `"theme"` | Dots and bars under icons: `"theme"` (follows `shape`), `"rounded"` or `"square"`. |
@@ -444,6 +446,11 @@ Settings persist in `~/.config/omarchy/omadock.json` and are editable live:
 | `keepPointer` | `bool` | `true` | Focusing a window from the dock keeps the pointer where it is instead of warping it to the window centre. |
 | `folderColor` | `string` | `"theme"` | `"theme"`, `"symbolic"`, `"white"`, `"black"`, `"Yaru-blue"`, etc. |
 | `hoverEffect` | `string` | `"zoom"` | Hover mode: magnification `"zoom"` or `"wave"`; effects `"lift"`, `"glow"`, `"glitch"` (shaders); or `"off"`. |
+| `magnifyPeak` | `number` | `1.8` | Wave hover: how much the icon under the pointer grows at the peak (`1`–`2.6`). |
+| `zoomPeak` | `number` | `1.4` | Zoom hover: how much the hovered icon grows (`1`–`2.6`); the layout stays put. |
+| `magnifySpread` | `number` | `3.0` | Wave hover: how many icon slots across the wave grows (`1`–`4`). The default puts the falloff edge two icons out each side, so the hovered icon and two neighbours each way grow. |
+| `magnifySmooth` | `int` | `160` | Milliseconds the magnification animation takes (`0`–`400`); longer trails behind the pointer more. |
+| `magnifyLift` | `int` | `6` | How far icons rise while magnifying, in pixels (`0`–`20`), following the same curve. |
 | `dividerGeometry` | `string` | `"classic"` | Section divider length: `"classic"` keeps the original short lines; `"long"` uses the adjustable `dividerHeight` share. |
 | `showNotificationBadges` | `bool` | `true` | Count matching notifications on dock icons and folder tiles (not unread messages); sticky until the app is focused, across shell restarts. |
 | `badgeStyle` | `string` | `"count"` | Badge shape: `"count"` pill with the number, or `"dot"`. |

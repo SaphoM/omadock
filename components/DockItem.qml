@@ -71,8 +71,16 @@ Item {
     return ((area.containsMouse && !item.isDragging) || item.isFileDropTarget) ? root.zoomPeak : 1
   }
 
+  // The lift rides on the animated curve: whatever share of the peak the
+  // scale has reached, the same share of the rise, so the two never disagree.
+  readonly property real liftOffset: {
+    if (!root) return 0
+    var peak = root.waveHover ? root.magnifyPeak : root.zoomPeak
+    return root.magnifyLift * (item.magnifyScale - 1) / Math.max(0.001, peak - 1)
+  }
+
   Behavior on magnifyScale {
-    NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+    NumberAnimation { duration: root ? root.magnifySmooth : 160; easing.type: Easing.OutCubic }
   }
 
   // Live window state. The model carries plain primitives, so anything that
@@ -213,7 +221,7 @@ Item {
     Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
 
     transform: Translate {
-      y: item.bounceY
+      y: item.bounceY - item.liftOffset
     }
 
     // Drop target halo: creating an App Folder, or files the app can open

@@ -127,8 +127,16 @@ Item {
     return groupArea.containsMouse ? root.zoomPeak : 1
   }
 
+  // The lift rides on the animated curve: whatever share of the peak the
+  // scale has reached, the same share of the rise, so the two never disagree.
+  readonly property real liftOffset: {
+    if (!root) return 0
+    var peak = root.waveHover ? root.magnifyPeak : root.zoomPeak
+    return root.magnifyLift * (gitem.magnifyScale - 1) / Math.max(0.001, peak - 1)
+  }
+
   Behavior on magnifyScale {
-    NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+    NumberAnimation { duration: root ? root.magnifySmooth : 160; easing.type: Easing.OutCubic }
   }
 
   Item {
@@ -137,6 +145,7 @@ Item {
     height: root ? root.iconSlot : 0
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.verticalCenter: parent.verticalCenter
+    transform: Translate { y: -gitem.liftOffset }
 
     Item {
       id: iconContainer
