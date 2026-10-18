@@ -403,6 +403,12 @@ Item {
     if (root.appLibrary === localAppLibrary) iconIndexScan.running = true
     // Fills HyprlandMonitor.scale for outputScale.
     root.recheckOutputScale()
+    // windowsOverlapDock starts false and would otherwise keep that value until
+    // the first window/focus/workspace event: with intelligent autohide that
+    // reads as "nothing overlaps the dock", so after a shell start or a plugin
+    // reload the dock would never hide while a window sat over it. The debounce
+    // only launches the check when autohide + intelligent are on.
+    debounceOverlapTimer.restart()
   }
 
   // ------------------------------------------------- magnification
@@ -4855,7 +4861,15 @@ Item {
         var cardW = (dockCardComp && dockCardComp.dockCard.width > 0) ? dockCardComp.dockCard.width : Style.space(320)
         return Math.min(parent.width, cardW + Style.space(96))
       }
-      height: (root.autohide && !root.dockVisible) ? root.revealHeight : 0
+      // The strip is what reveals a hidden dock, so it must also be what keeps
+      // a revealed dock revealed: it stays put while the dock is visible too
+      // (only "always show" drops it). Collapsing it on reveal lost its own
+      // hover at the same instant, and any pointer position the strip reaches
+      // but the card's hitbox does not — the shadow room under the card, the
+      // strip's wider margins — then read as "pointer left": hide, strip
+      // returns, reveal, forever, whenever a window overlapped the dock
+      // (intelligent autohide) or plain autohide was on.
+      height: root.autohide ? root.revealHeight : 0
       visible: height > 0
 
       HoverHandler {
@@ -4874,6 +4888,9 @@ Item {
       Rectangle {
         id: revealStripRect
         anchors.bottom: parent.bottom
+        // Affordance only while the dock is hidden; the strip itself remains
+        // as an input region either way.
+        visible: !(root && root.dockVisible)
         x: Math.round((parent.width - width) / 2)
         Behavior on x {
           NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
