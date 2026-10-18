@@ -187,9 +187,12 @@ PanelWindow {
 
   // One-shot channel probe (event-driven, zero idle CPU): reads which profile
   // `omadock-switch` has live so the About page can show the real state.
+  // The companion binary is optional (not every install ships it), so probe
+  // through a shell guard: a missing binary is just an empty answer instead
+  // of a process-spawn failure logged every time the panel opens.
   Process {
     id: channelProbe
-    command: ["omadock-switch", "status"]
+    command: ["sh", "-c", "if command -v omadock-switch >/dev/null 2>&1; then omadock-switch status; fi"]
     stdout: SplitParser {
       onRead: function(line) {
         if (line.indexOf("Active Mode:") < 0) return
